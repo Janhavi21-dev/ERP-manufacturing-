@@ -53,21 +53,59 @@ import auditLogRoutes from './modules/audit-logs/auditLog.routes.js';
 
 const app = express();
 
-// Security HTTP headers
-app.use(helmet());
+// Security HTTP headers (configured to allow cross-origin API requests)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
-// Cross-origin resource sharing
-const cors = require('cors');
+// Cross-origin resource sharing (CORS)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  'https://erp-manufacturing-1.onrender.com',
+  clientUrl,
+  clientUrl ? clientUrl.replace(/\/+$/, '') : null,
+].filter(Boolean);
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://erp-manufacturing-1.onrender.com'
-  ],
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // allow non-browser requests (curl, mobile, server-to-server)
+  const normalizedOrigin = origin.replace(/\/+$/, '');
+  if (allowedOrigins.includes(origin) || allowedOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+  // Dynamically allow any Render, Vercel, or Netlify deployment
+  if (
+    normalizedOrigin.endsWith('.onrender.com') ||
+    normalizedOrigin.endsWith('.vercel.app') ||
+    normalizedOrigin.endsWith('.netlify.app')
+  ) {
+    return true;
+  }
+  return false;
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Not Allowed for origin: ${origin}`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 204,
+  maxAge: 86400, // 24-hour preflight cache
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
