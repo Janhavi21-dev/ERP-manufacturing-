@@ -63,7 +63,7 @@ app.use(
       // Allow localhost, configured clientUrl, onrender.com, vercel.app, netlify.app, or mobile/curl (no origin)
       if (
         !origin ||
-        origin.startsWith('http://localhost:') ||
+        origin.startsWith('https://erp-manufacturing-1') ||
         origin.startsWith('http://127.0.0.1:') ||
         origin === clientUrl ||
         (clientUrl && origin === clientUrl.replace(/\/+$/, '')) ||
