@@ -57,28 +57,13 @@ const app = express();
 app.use(helmet());
 
 // Cross-origin resource sharing
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow localhost, configured clientUrl, onrender.com, vercel.app, netlify.app, or mobile/curl (no origin)
-      if (
-        !origin ||
-        origin.startsWith('https://erp-manufacturing-1') ||
-        origin.startsWith('http://127.0.0.1:') ||
-        origin === clientUrl ||
-        (clientUrl && origin === clientUrl.replace(/\/+$/, '')) ||
-        origin.endsWith('.onrender.com') ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.netlify.app')
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS Not Allowed for origin: ${origin}`));
-      }
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://erp-manufacturing-1.onrender.com'
+  ],
+  credentials: true
+}));
 
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
