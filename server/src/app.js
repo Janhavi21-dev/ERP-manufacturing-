@@ -1,9 +1,24 @@
 import 'dotenv/config';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Detect client dist folder if frontend is built alongside server
+const candidateDistPaths = [
+  path.resolve(__dirname, '../../../client/dist'),
+  path.resolve(process.cwd(), '../client/dist'),
+  path.resolve(process.cwd(), 'client/dist'),
+  path.resolve(process.cwd(), 'dist'),
+];
+const clientDistPath = candidateDistPaths.find((p) => fs.existsSync(p));
 
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -45,11 +60,20 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow localhost and specified client origin, and requests with no origin (curl/mobile)
-      if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === clientUrl) {
+      // Allow localhost, configured clientUrl, onrender.com, vercel.app, netlify.app, or mobile/curl (no origin)
+      if (
+        !origin ||
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('http://127.0.0.1:') ||
+        origin === clientUrl ||
+        (clientUrl && origin === clientUrl.replace(/\/+$/, '')) ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.netlify.app')
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('CORS Not Allowed'));
+        callback(new Error(`CORS Not Allowed for origin: ${origin}`));
       }
     },
     credentials: true,
@@ -67,11 +91,8 @@ if (nodeEnv !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Global API Rate Limiter
-app.use('/api', apiLimiter);
-
-// Health check endpoint
-app.get('/api/v1/health', (req, res) => {
+// Health check endpoints (always returns JSON for Render, uptime monitors & load balancers)
+app.get(['/health', '/api/v1/health'], (req, res) => {
   return ApiResponse.success(res, {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -79,30 +100,73 @@ app.get('/api/v1/health', (req, res) => {
   }, 'Manufacturing ERP API is running smoothly');
 });
 
-// Mount module routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/roles', roleRoutes);
-app.use('/api/v1/categories', categoryRoutes);
-app.use('/api/v1/units', unitRoutes);
-app.use('/api/v1/warehouses', warehouseRoutes);
-app.use('/api/v1/suppliers', supplierRoutes);
-app.use('/api/v1/customers', customerRoutes);
-app.use('/api/v1/products', productRoutes);
-app.use('/api/v1/inventory', inventoryRoutes);
-app.use('/api/v1/procurement', procurementRoutes);
-app.use('/api/v1/boms', bomRoutes);
-app.use('/api/v1/production', productionRoutes);
-app.use('/api/v1/quality', qualityRoutes);
-app.use('/api/v1/sales', salesRoutes);
-app.use('/api/v1/invoices', invoiceRoutes);
-app.use('/api/v1/payments', paymentRoutes);
-app.use('/api/v1/expenses', expenseRoutes);
-app.use('/api/v1/employees', employeeRoutes);
-app.use('/api/v1/dashboard', dashboardRoutes);
-app.use('/api/v1/reports', reportRoutes);
-app.use('/api/v1/notifications', notificationRoutes);
-app.use('/api/v1/audit-logs', auditLogRoutes);
+// Root endpoint:
+// - Returns 200 JSON for API clients, Render health pings, or standalone backend deployments
+// - Serves frontend index.html for browser visits when client build is present
+app.get('/', (req, res) => {
+  const wantsJson = req.headers.accept && req.headers.accept.includes('application/json');
+
+  if (!wantsJson && clientDistPath) {
+    return res.sendFile(path.join(clientDistPath, 'index.html'));
+  }
+
+  return ApiResponse.success(
+    res,
+    {
+      name: 'Manufacturing ERP API',
+      status: 'healthy',
+      env: nodeEnv,
+      timestamp: new Date().toISOString(),
+      health: '/api/v1/health',
+      version: '1.0.0',
+    },
+    'Manufacturing ERP API is active and operational'
+  );
+});
+
+// Serve client static assets if built alongside server
+if (clientDistPath) {
+  app.use(express.static(clientDistPath, { index: false }));
+}
+
+// Helper to mount routes across standard prefix variations: /api/v1/..., /api/..., and direct /...
+const mountModule = (pathSegment, router) => {
+  app.use([`/api/v1/${pathSegment}`, `/api/${pathSegment}`, `/${pathSegment}`], router);
+};
+
+mountModule('auth', authRoutes);
+mountModule('users', userRoutes);
+mountModule('roles', roleRoutes);
+mountModule('categories', categoryRoutes);
+mountModule('units', unitRoutes);
+mountModule('warehouses', warehouseRoutes);
+mountModule('suppliers', supplierRoutes);
+mountModule('customers', customerRoutes);
+mountModule('products', productRoutes);
+mountModule('inventory', inventoryRoutes);
+mountModule('procurement', procurementRoutes);
+mountModule('boms', bomRoutes);
+mountModule('production', productionRoutes);
+mountModule('quality', qualityRoutes);
+mountModule('sales', salesRoutes);
+mountModule('invoices', invoiceRoutes);
+mountModule('payments', paymentRoutes);
+mountModule('expenses', expenseRoutes);
+mountModule('employees', employeeRoutes);
+mountModule('dashboard', dashboardRoutes);
+mountModule('reports', reportRoutes);
+mountModule('notifications', notificationRoutes);
+mountModule('audit-logs', auditLogRoutes);
+
+// Serve SPA index.html for non-API client routes if frontend build is available
+if (clientDistPath) {
+  app.get('*', (req, res, next) => {
+    if (req.headers.accept?.includes('application/json') || req.originalUrl.startsWith('/api')) {
+      return next();
+    }
+    return res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Catch-all 404 handler for undefined API routes
 app.use('*', (req, res, next) => {

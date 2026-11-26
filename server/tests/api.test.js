@@ -44,6 +44,19 @@ describe('Manufacturing ERP End-to-End API Test Suite', () => {
   });
 
   describe('1. System Health & Authentication', () => {
+    it('GET / returns 200 and API metadata', async () => {
+      const res = await request(app).get('/').set('Accept', 'application/json');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('healthy');
+    });
+
+    it('GET /health returns healthy', async () => {
+      const res = await request(app).get('/health');
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe('healthy');
+    });
+
     it('GET /api/v1/health returns healthy', async () => {
       const res = await request(app).get('/api/v1/health');
       expect(res.status).toBe(200);
@@ -57,6 +70,16 @@ describe('Manufacturing ERP End-to-End API Test Suite', () => {
       });
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
+    });
+
+    it('POST /auth/login resolves without /api/v1 prefix alias', async () => {
+      const res = await request(app).post('/auth/login').send({
+        email: 'admin@apex.com',
+        password: 'Password123!',
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.token).toBeDefined();
     });
 
     it('GET /api/v1/auth/me returns user profile and permissions', async () => {
