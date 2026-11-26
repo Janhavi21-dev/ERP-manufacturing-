@@ -1,0 +1,195 @@
+export const ROLES = {
+  SUPER_ADMIN: 'Super Admin',
+  PRODUCTION_MANAGER: 'Production Manager',
+  INVENTORY_MANAGER: 'Inventory Manager',
+  PROCUREMENT_OFFICER: 'Procurement Officer',
+  SALES_MANAGER: 'Sales Manager',
+  QUALITY_INSPECTOR: 'Quality Inspector',
+  ACCOUNTANT: 'Accountant',
+  OPERATOR: 'Employee / Operator',
+};
+
+export const PERMISSIONS = {
+  // Master Data
+  MANAGE_PRODUCTS: 'manage_products',
+  VIEW_PRODUCTS: 'view_products',
+  MANAGE_CATEGORIES: 'manage_categories',
+  MANAGE_WAREHOUSES: 'manage_warehouses',
+  MANAGE_CUSTOMERS: 'manage_customers',
+  MANAGE_SUPPLIERS: 'manage_suppliers',
+
+  // Inventory
+  VIEW_INVENTORY: 'view_inventory',
+  ADJUST_INVENTORY: 'adjust_inventory',
+  TRANSFER_INVENTORY: 'transfer_inventory',
+
+  // Procurement
+  CREATE_PURCHASE_ORDER: 'create_purchase_order',
+  APPROVE_PURCHASE_ORDER: 'approve_purchase_order',
+  RECEIVE_GOODS: 'receive_goods',
+
+  // Production & BOM
+  MANAGE_BOM: 'manage_bom',
+  CREATE_WORK_ORDER: 'create_work_order',
+  APPROVE_WORK_ORDER: 'approve_work_order',
+  RELEASE_WORK_ORDER: 'release_work_order',
+  EXECUTE_WORK_ORDER: 'execute_work_order',
+
+  // Quality Control
+  PERFORM_INSPECTION: 'perform_inspection',
+  APPROVE_QUALITY: 'approve_quality',
+
+  // Sales & Dispatch
+  MANAGE_SALES_ORDERS: 'manage_sales_orders',
+  DISPATCH_GOODS: 'dispatch_goods',
+
+  // Finance & Invoicing
+  MANAGE_INVOICES: 'manage_invoices',
+  POST_INVOICE: 'post_invoice',
+  RECORD_PAYMENTS: 'record_payments',
+  MANAGE_EXPENSES: 'manage_expenses',
+  VIEW_FINANCIALS: 'view_financials',
+
+  // System Administration
+  MANAGE_USERS: 'manage_users',
+  MANAGE_ROLES: 'manage_roles',
+  VIEW_AUDIT_LOGS: 'view_audit_logs',
+  MANAGE_SETTINGS: 'manage_settings',
+  VIEW_REPORTS: 'view_reports',
+};
+
+export const ROLE_PERMISSIONS = {
+  [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
+  [ROLES.PRODUCTION_MANAGER]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.MANAGE_BOM,
+    PERMISSIONS.CREATE_WORK_ORDER,
+    PERMISSIONS.APPROVE_WORK_ORDER,
+    PERMISSIONS.RELEASE_WORK_ORDER,
+    PERMISSIONS.EXECUTE_WORK_ORDER,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.INVENTORY_MANAGER]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.MANAGE_PRODUCTS,
+    PERMISSIONS.MANAGE_CATEGORIES,
+    PERMISSIONS.MANAGE_WAREHOUSES,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.ADJUST_INVENTORY,
+    PERMISSIONS.TRANSFER_INVENTORY,
+    PERMISSIONS.RECEIVE_GOODS,
+    PERMISSIONS.DISPATCH_GOODS,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.PROCUREMENT_OFFICER]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.MANAGE_SUPPLIERS,
+    PERMISSIONS.CREATE_PURCHASE_ORDER,
+    PERMISSIONS.APPROVE_PURCHASE_ORDER,
+    PERMISSIONS.RECEIVE_GOODS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.SALES_MANAGER]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.MANAGE_CUSTOMERS,
+    PERMISSIONS.MANAGE_SALES_ORDERS,
+    PERMISSIONS.DISPATCH_GOODS,
+    PERMISSIONS.MANAGE_INVOICES,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.QUALITY_INSPECTOR]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.PERFORM_INSPECTION,
+    PERMISSIONS.APPROVE_QUALITY,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.ACCOUNTANT]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.MANAGE_CUSTOMERS,
+    PERMISSIONS.MANAGE_SUPPLIERS,
+    PERMISSIONS.MANAGE_INVOICES,
+    PERMISSIONS.POST_INVOICE,
+    PERMISSIONS.RECORD_PAYMENTS,
+    PERMISSIONS.MANAGE_EXPENSES,
+    PERMISSIONS.VIEW_FINANCIALS,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.OPERATOR]: [
+    PERMISSIONS.VIEW_PRODUCTS,
+    PERMISSIONS.VIEW_INVENTORY,
+    PERMISSIONS.EXECUTE_WORK_ORDER,
+  ],
+};
+
+export const ITEM_TYPES = {
+  RAW_MATERIAL: 'raw_material',
+  SEMI_FINISHED: 'semi_finished',
+  FINISHED_GOOD: 'finished_good',
+  CONSUMABLE: 'consumable',
+  SPARE_PART: 'spare_part',
+};
+
+export const STOCK_MOVEMENT_TYPES = {
+  OPENING_BALANCE: 'OPENING_BALANCE',
+  PURCHASE_RECEIPT: 'PURCHASE_RECEIPT',
+  PRODUCTION_ISSUE: 'PRODUCTION_ISSUE',
+  PRODUCTION_RETURN: 'PRODUCTION_RETURN',
+  FINISHED_GOODS_RECEIPT: 'FINISHED_GOODS_RECEIPT',
+  SALES_DISPATCH: 'SALES_DISPATCH',
+  SALES_RETURN: 'SALES_RETURN',
+  SUPPLIER_RETURN: 'SUPPLIER_RETURN',
+  STOCK_TRANSFER_IN: 'STOCK_TRANSFER_IN',
+  STOCK_TRANSFER_OUT: 'STOCK_TRANSFER_OUT',
+  STOCK_ADJUSTMENT_POSITIVE: 'STOCK_ADJUSTMENT_POSITIVE',
+  STOCK_ADJUSTMENT_NEGATIVE: 'STOCK_ADJUSTMENT_NEGATIVE',
+  SCRAP_WRITEOFF: 'SCRAP_WRITEOFF',
+};
+
+export const PO_STATUSES = {
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  APPROVED: 'approved',
+  PARTIALLY_RECEIVED: 'partially_received',
+  RECEIVED: 'received',
+  CANCELLED: 'cancelled',
+};
+
+export const WORK_ORDER_STATUSES = {
+  DRAFT: 'draft',
+  PLANNED: 'planned',
+  APPROVED: 'approved',
+  RELEASED: 'released',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CLOSED: 'closed',
+  CANCELLED: 'cancelled',
+};
+
+export const QUALITY_STATUSES = {
+  PENDING: 'pending',
+  PASSED: 'passed',
+  FAILED: 'failed',
+  CONDITIONALLY_ACCEPTED: 'conditionally_accepted',
+};
+
+export const SALES_ORDER_STATUSES = {
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  APPROVED: 'approved',
+  PARTIALLY_FULFILLED: 'partially_fulfilled',
+  FULFILLED: 'fulfilled',
+  CLOSED: 'closed',
+  CANCELLED: 'cancelled',
+};
+
+export const INVOICE_STATUSES = {
+  DRAFT: 'draft',
+  POSTED: 'posted',
+  PARTIALLY_PAID: 'partially_paid',
+  PAID: 'paid',
+  VOIDED: 'voided',
+};
